@@ -1,0 +1,12 @@
+import * as DesignationModel from "../models/designationModel.js";
+
+export const createDesignationService = async (data) => {
+  return await DesignationModel.createDesignation(
+    data.title,
+    data.level
+  );
+};
+
+export const getDesignationsService = async () => {
+  return await DesignationModel.getDesignations();
+};
