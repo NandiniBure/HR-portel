@@ -1,0 +1,50 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import Dashboard from "./pages/Dashboard";
+import Employees from "./pages/Employees";
+import LeaveManagement from "./pages/LeaveManagement";
+import Payroll from "./pages/Payroll";
+import Recruitment from "./pages/Recruitment";
+import Settings from "./pages/Settings";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
+import { Provider } from "react-redux";
+import { store } from "./store/store";
+import EmployeeApplyLeave from "./pages/LeaveApplication";
+import ProtectedRoute from "./components/ProtectedRoute";
+import EmployeeAttendanceMarking from "./pages/Attendence";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <Provider store={store}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/employees" element={<Employees />} />
+            <Route element={<ProtectedRoute allowedRoles={["manager"]} />}>
+              <Route path="/leave" element={<LeaveManagement />} />
+            </Route>
+
+            <Route path="/leave-apply" element={<EmployeeApplyLeave />} />
+            <Route path="/attendence" element={<EmployeeAttendanceMarking />} />
+            <Route path="/payroll" element={<Payroll />} />
+            <Route path="/recruitment" element={<Recruitment />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </Provider >
+);
+
+export default App;
