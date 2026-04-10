@@ -35,7 +35,7 @@ const App = () => (
             </Route>
 
             <Route path="/leave-apply" element={<EmployeeApplyLeave />} />
-            <Route path="/attendance" element={<EmployeeAttendanceMarking />} />
+            <Route path="/attendence" element={<EmployeeAttendanceMarking />} />
             <Route path="/payroll" element={<Payroll />} />
             <Route path="/recruitment" element={<Recruitment />} />
             <Route path="/settings" element={<Settings />} />

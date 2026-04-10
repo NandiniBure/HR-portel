@@ -22,8 +22,6 @@ const LeaveManagement = () => {
   const { data: allLeaves, isLoading: loadingLeaves, error: leavesError } = useGetAllLeavesQuery();
   const [updateLeaveStatus, { isLoading: updatingStatus }] = useUpdateLeaveStatusMutation();
 
-  console.log(allLeaves?.data)
-
   const handleApproval = ({ leaveId, status }: any) => {
     updateLeaveStatus({ leaveId, status })
   }

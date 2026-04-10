@@ -6,7 +6,8 @@ import {
   updateLeaveStatus,
   deleteLeave,
   getLeaveBalances,
-  getPendingLeaves
+  getPendingLeaves,
+  getEmployeesOnLeave,
 } from "../controllers/leaveController.js";
 import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
 
@@ -23,6 +24,14 @@ router.patch(
 );
 router.delete("/leaves/:leaveId", authenticate, deleteLeave);
 router.get("/leaves/balance", authenticate, getLeaveBalances);
-router.get("/leaves/pending-leaves",authenticate, authorizeRoles("manager"),getPendingLeaves);
-
+router.get(
+  "/leaves/pending-leaves",
+  authenticate,
+  getPendingLeaves
+);
+router.get(
+  "/leaves/employees-onleave-today",
+  authenticate,
+  getEmployeesOnLeave
+);
 export default router;

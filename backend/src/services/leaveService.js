@@ -51,8 +51,18 @@ export const getMyLeavesService = async (userId) => {
 };
 
 export const getAllLeavesService = async (options = {}) => {
-  // Pass status for fetching pending leaves if provided in options
-  return await fetchAllLeaves(options.status ? { status: options.status } : undefined);
+  // Build a filter according to leaveController.js (159-161) for getEmployeesOnLeave usage
+  const filter = {};
+  if (options.status) {
+    filter.status = options.status;
+  }
+  if (options.overlapsDate) {
+    filter.overlapsDate = options.overlapsDate;
+  }
+  if (options.includeEmployee) {
+    filter.includeEmployee = options.includeEmployee;
+  }
+  return await fetchAllLeaves(Object.keys(filter).length > 0 ? filter : undefined);
 };
 
 export const updateLeaveStatusService = async (

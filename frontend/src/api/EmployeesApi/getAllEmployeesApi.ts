@@ -1,7 +1,6 @@
 import axios from "axios";
 
 export default async function getAllEmployeesApi(search?: string) {
-  console.log("--->",search);
   try {
     const token = localStorage.getItem("token");
     const params: Record<string, string> = {};

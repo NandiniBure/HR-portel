@@ -91,18 +91,43 @@ const EmployeeApplyLeave = () => {
   // Renders balance leaves at the top
   function renderBalanceLeaves() {
     return (
-      <div className="flex gap-4 flex-wrap mb-6">
-        {liveBalance?.data?.map((bal: any) => (
-          <div
-            key={bal.leaveTypeId}
-            className="px-5 py-3 rounded-xl bg-primary/10 flex flex-col items-center shadow min-w-[110px]"
-          >
-            <span className="text-sm font-semibold text-card-foreground">{bal.leaveType}</span>
-            <span className="text-2xl font-bold text-primary">{bal.usedDays}/{bal.remainingDays}</span>
-            <span className="text-xs text-muted-foreground">days</span>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {liveBalance?.data?.map((item: any) => {
+          // Parse values and format as integers to avoid decimals
+          const usedDays = Number(item.usedDays);
+          const allocatedDays = Number(item.allocatedDays);
+          const remainingDays = Number(item.remainingDays);
+
+          return (
+            <div key={item.leaveTypeId} className="bg-card rounded-xl p-5 shadow-[var(--shadow-card)] border border-border">
+              <p className="text-sm text-muted-foreground font-medium mb-3">{item.leaveType}</p>
+              <div className="flex items-end justify-between mb-3">
+                <span className="text-2xl font-bold text-card-foreground">
+                  {Math.round(usedDays)}/{Math.round(allocatedDays)}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {Math.round(remainingDays)} remaining
+                </span>
+              </div>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                {/* You can set item.color if available, otherwise use a default or by leaveType */}
+                <div
+                  className={`h-full rounded-full ${item.color || 'bg-primary'}`}
+                  style={{
+                    width: `${allocatedDays > 0 ? (usedDays / allocatedDays) * 100 : 0}%`
+                  }}
+                />
+              </div>
+              <div className="mt-3 text-xs text-muted-foreground flex justify-between">
+                <span>Code: {item.leaveCode}</span>
+                <span>Year: {item.year}</span>
+              </div>
+            </div>
+          );
+        })}
+  
       </div>
+
     );
   }
 

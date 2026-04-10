@@ -1,7 +1,8 @@
 import {
   LayoutDashboard, Users, CalendarDays, DollarSign,
   UserPlus, Settings, LogOut, Building2,
-  AppleIcon
+  AppleIcon,
+  Send
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -12,6 +13,7 @@ const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/", roles: ["employee", "manager", "admin"] },
   { icon: Users, label: "Employees", path: "/employees", roles: ["manager", "admin"] },
   { icon: CalendarDays, label: "Leave Management", path: "/leave", roles: ["manager", "admin"] },
+  { icon: Send, label: " Attendence Management", path: "/attendence", roles: ["manager", "admin","employee"] },
   { icon: AppleIcon, label: "Apply Leave", path: "/leave-apply", roles: ["employee"] },
   { icon: DollarSign, label: "Payroll", path: "/payroll", roles: ["manager", "admin"] },
   { icon: UserPlus, label: "Recruitment", path: "/recruitment", roles: ["admin"] },

@@ -138,7 +138,7 @@ export const fetchMyLeaves = async (userId) => {
   return result.rows;
 };
 
-export const fetchAllLeaves = async (status) => {
+export const fetchAllLeaves = async (filter = {}) => {
   let query = `
     SELECT
       l.id AS "leaveId",
@@ -168,16 +168,37 @@ export const fetchAllLeaves = async (status) => {
   `;
 
   const values = [];
+  const whereClauses = [];
 
-  // Only filter by status if it is explicitly provided (i.e., truthy value)
-  if (status && status.status) {
-    values.push(status.status);
-    query += ` WHERE l.status = $1`;
+  // Filter by status
+  if (filter.status) {
+    values.push(filter.status);
+    whereClauses.push(`l.status = $${values.length}`);
   }
 
-  query += " ORDER BY l.applied_at DESC";
+  // Filter by date overlap
+  if (filter.overlapsDate) {
+    values.push(filter.overlapsDate);
+    whereClauses.push(`
+      l.start_date <= $${values.length}
+      AND l.end_date >= $${values.length}
+    `);
+  }
+
+  // Optional employee filter
+  if (filter.employeeId) {
+    values.push(filter.employeeId);
+    whereClauses.push(`l.employee_id = $${values.length}`);
+  }
+
+  if (whereClauses.length > 0) {
+    query += ` WHERE ${whereClauses.join(" AND ")}`;
+  }
+
+  query += ` ORDER BY l.applied_at DESC`;
 
   const result = await db.query(query, values);
+
   return result.rows;
 };
 

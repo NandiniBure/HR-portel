@@ -11,8 +11,6 @@ const statusStyles: Record<string, string> = {
 
 const EmployeeTable = () => {
   const { data, isLoading, error: fetchError } = useGetAllEmployeesQuery();
-console.log(data)
-
 
   return (
     <div className="bg-card rounded-xl shadow-[var(--shadow-card)] border border-border">
@@ -35,7 +33,9 @@ console.log(data)
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold">
-                      {emp.avatar}
+                      {emp.first_name && emp.first_name.trim().length > 0
+                        ? emp.first_name.trim()[0].toUpperCase()
+                        : ""}
                     </div>
                     <div>
                       <p className="text-sm font-medium text-card-foreground">{emp.first_name}</p>

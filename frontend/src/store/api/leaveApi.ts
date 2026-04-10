@@ -3,7 +3,8 @@ import applyLeave from "@/api/LeavesApi/applyLeaveApi";
 import getLeaveBalance from "@/api/LeavesApi/getbalanceleavesApi";
 import getAllLeaves from "@/api/LeavesApi/getAllLeavesApi";
 import updateLeaveStatus from "@/api/LeavesApi/aproveLeaveApi";
-import { getAllPendingLeaveApi } from "@/api/LeavesApi/getAllpendingLeaveApi"; // <-- Added
+import { getAllPendingLeaveApi } from "@/api/LeavesApi/getAllpendingLeaveApi";
+import { getEmployeesOnLeaveToday } from "@/api/LeavesApi/getEmployeesOnLeaves"; // <-- Added
 
 // Matches the structure used in LeaveApplication.tsx's API call
 export interface ApplyLeavePayload {
@@ -27,7 +28,7 @@ export const leaveApi = createApi({
   baseQuery: async (_args, api, extraOptions) => {
     return { error: { status: 500, data: "Not Implemented" } };
   },
-  tagTypes: ["Leaves", "LeaveBalance", "PendingLeaves"],
+  tagTypes: ["Leaves", "LeaveBalance", "PendingLeaves", "EmployeesOnLeaveToday"],
   endpoints: (builder) => ({
     applyLeave: builder.mutation<any, ApplyLeavePayload>({
       async queryFn(payload: ApplyLeavePayload) {
@@ -52,7 +53,7 @@ export const leaveApi = createApi({
         }
       },
       // Invalidate leave balance and leaves list after applying a leave
-      invalidatesTags: ["LeaveBalance", "Leaves", "PendingLeaves"],
+      invalidatesTags: ["LeaveBalance", "Leaves", "PendingLeaves", "EmployeesOnLeaveToday"],
     }),
     getLeaveBalance: builder.query<any, number>({
       async queryFn(year: number) {
@@ -86,7 +87,7 @@ export const leaveApi = createApi({
       },
       providesTags: ["Leaves"],
     }),
-    getAllPendingLeaves: builder.query<any, void>({ // <-- Added
+    getAllPendingLeaves: builder.query<any, void>({
       async queryFn() {
         try {
           const data = await getAllPendingLeaveApi();
@@ -102,6 +103,22 @@ export const leaveApi = createApi({
         }
       },
       providesTags: ["PendingLeaves"],
+    }),
+    getEmployeesOnLeaveToday: builder.query<any, void>({
+      async queryFn() {
+        try {
+          const data = await getEmployeesOnLeaveToday();
+          return { data };
+        } catch (error: any) {
+          return {
+            error: {
+              status: error.response?.status || 500,
+              data: error.response?.data || error.message || "Failed to fetch employees on leave today",
+            },
+          };
+        }
+      },
+      providesTags: ["EmployeesOnLeaveToday"],
     }),
     updateLeaveStatus: builder.mutation<any, UpdateLeaveStatusPayload>({
       async queryFn(payload: UpdateLeaveStatusPayload) {
@@ -121,7 +138,7 @@ export const leaveApi = createApi({
         }
       },
       // Invalidate leaves, leave balance and pending leaves after status update
-      invalidatesTags: ["Leaves", "LeaveBalance", "PendingLeaves"],
+      invalidatesTags: ["Leaves", "LeaveBalance", "PendingLeaves", "EmployeesOnLeaveToday"],
     }),
   }),
 });
@@ -130,6 +147,7 @@ export const {
   useApplyLeaveMutation,
   useGetLeaveBalanceQuery,
   useGetAllLeavesQuery,
-  useGetAllPendingLeavesQuery, // <-- Export the hook
+  useGetAllPendingLeavesQuery,
+  useGetEmployeesOnLeaveTodayQuery, // <-- Export new hook
   useUpdateLeaveStatusMutation,
 } = leaveApi;
