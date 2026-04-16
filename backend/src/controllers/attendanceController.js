@@ -56,12 +56,13 @@ export async function checkOut(req, res) {
 
 export async function getAttendanceByEmployee(req, res) {
   try {
-    // employeeId is used in the route: /attendance/employee/:employeeId
-    // Correct parameter is req.params.employeeId
+    // Get employeeId from params and date from query (date is optional)
     const { employeeId } = req.params;
+    const date = req.query.date || null;
 
     const attendance = await AttendanceService.getAttendanceByEmployee(
-      employeeId
+      employeeId,
+      date // If date is not provided, service should use default (today)
     );
 
     return res.status(200).json({
@@ -78,7 +79,9 @@ export async function getAttendanceByEmployee(req, res) {
 
 export async function getAllAttendance(req, res) {
   try {
-    const attendance = await AttendanceService.getAllAttendance();
+    const { date, search } = req.query;
+
+    const attendance = await AttendanceService.getAllAttendance(date, search);
 
     return res.status(200).json({
       success: true,

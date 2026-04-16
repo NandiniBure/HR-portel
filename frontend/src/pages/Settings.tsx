@@ -25,8 +25,7 @@ const Settings = () => {
     isLoading: isEmployeeLoading,
     error: employeeError,
   } = useGetEmployeeByIdQuery(
-    { userId },
-    { skip: !userId }
+  
   );
 
   // For demonstration and debugging

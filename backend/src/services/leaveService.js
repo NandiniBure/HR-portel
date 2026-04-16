@@ -51,18 +51,39 @@ export const getMyLeavesService = async (userId) => {
 };
 
 export const getAllLeavesService = async (options = {}) => {
-  // Build a filter according to leaveController.js (159-161) for getEmployeesOnLeave usage
   const filter = {};
+
+  // 🔹 Status filter
   if (options.status) {
     filter.status = options.status;
   }
+
+  // 🔹 Overlap date (for "employees on leave today")
   if (options.overlapsDate) {
     filter.overlapsDate = options.overlapsDate;
   }
+
+  // 🔹 Include employee join
   if (options.includeEmployee) {
     filter.includeEmployee = options.includeEmployee;
   }
-  return await fetchAllLeaves(Object.keys(filter).length > 0 ? filter : undefined);
+
+  // 🔹 Date range filter
+  if (options.fromDate || options.toDate) {
+    filter.dateRange = {
+      fromDate: options.fromDate,
+      toDate: options.toDate,
+    };
+  }
+
+  // 🔹 Employee name filter
+  if (options.employeeName) {
+    filter.employeeName = options.employeeName;
+  }
+
+  return await fetchAllLeaves(
+    Object.keys(filter).length > 0 ? filter : undefined
+  );
 };
 
 export const updateLeaveStatusService = async (

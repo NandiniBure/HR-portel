@@ -70,7 +70,14 @@ export const getMyLeaves = async (req, res) => {
 
 export const getAllLeaves = async (req, res) => {
   try {
-    const leaves = await getAllLeavesService();
+    const { fromDate, toDate, employeeName, status } = req.query;
+
+    const leaves = await getAllLeavesService({
+      fromDate,
+      toDate,
+      employeeName,
+      status,
+    });
 
     return res.status(200).json({
       success: true,

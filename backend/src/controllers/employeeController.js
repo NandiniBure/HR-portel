@@ -28,11 +28,20 @@ const createEmployee = async (req, res) => {
 // ✅ GET ALL (now passes search to service if exists)
 const getEmployees = async (req, res) => {
   try {
-    const { search } = req.query;
-    let employees;
+    const { search, designation, department, joinFrom, joinTo ,status} = req.query;
 
-    // Always pass search param to service, let service handle logic
-    employees = await getAllEmployees(search && search.trim() !== "" ? search.trim() : undefined);
+
+
+    const employees = await getAllEmployees({
+      search: search?.trim() || undefined,
+      designation: designation?.trim() || undefined,
+      department: department?.trim() || undefined,
+      joinFrom: joinFrom || undefined,
+      joinTo: joinTo || undefined,
+      status:status || undefined
+    });
+
+   
 
     res.json(employees);
   } catch (err) {

@@ -1,8 +1,8 @@
 // payrollController.js
 
 import * as payrollModel from "../models/payrollModel.js";
-// Removed: import payrollService from '../services/payrollService.js';
 
+// Existing createPayroll and getPayroll functions remain unchanged
 export const createPayroll = async (req, res) => {
   try {
     const {
@@ -63,6 +63,22 @@ export const getPayroll = async (req, res) => {
 
     const data = await payrollModel.getPayrollByEmployee(employee_id);
 
+    res.json({
+      success: true,
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// Add getAllPayroll function
+export const getAllPayroll = async (req, res) => {
+  try {
+    const data = await payrollModel.getPayrolls();
     res.json({
       success: true,
       data,

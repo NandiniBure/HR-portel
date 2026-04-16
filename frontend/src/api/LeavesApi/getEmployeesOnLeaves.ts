@@ -1,17 +1,19 @@
-import axios from "axios";
+import API from "@/middlewear/ClientApi"; // Use your interceptor-based axios instance
 
 // Fetches employees who are on leave today
 export const getEmployeesOnLeaveToday = async () => {
   try {
-    const token = localStorage.getItem("token");
-    const response = await axios.get("http://localhost:5000/api/leaves/employees-onleave-today", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await API.get("/leaves/employees-onleave-today");
     return response.data;
   } catch (error: any) {
-    // Standardize error for frontend use
-    throw error.response?.data || error.message || "Failed to fetch employees on leave today";
+    console.error(
+      "Failed to fetch employees on leave today:",
+      error?.response?.data?.message || error.message
+    );
+    throw new Error(
+      error?.response?.data?.message ||
+      error.message ||
+      "Failed to fetch employees on leave today"
+    );
   }
 };

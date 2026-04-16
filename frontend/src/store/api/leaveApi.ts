@@ -71,10 +71,10 @@ export const leaveApi = createApi({
       },
       providesTags: ["LeaveBalance"],
     }),
-    getAllLeaves: builder.query<any, void>({
-      async queryFn() {
+    getAllLeaves: builder.query<any, any>({
+      async queryFn(filters) {
         try {
-          const data = await getAllLeaves();
+          const data = await getAllLeaves(filters);
           return { data };
         } catch (error: any) {
           return {

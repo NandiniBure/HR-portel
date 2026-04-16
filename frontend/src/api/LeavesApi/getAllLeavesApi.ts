@@ -1,22 +1,20 @@
-import axios from "axios";
+import API from "@/middlewear/ClientApi"; // Use your interceptor-based axios instance
 
-export default async function getAllLeaves() {
+export default async function getAllLeaves(filters: any = {}) {
   try {
-    const token = localStorage.getItem("token");
-
-    const response = await axios.get("http://localhost:5000/api/leaves/all", {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token ? `Bearer ${token}` : undefined,
-      },
+    const response = await API.get("/leaves/all", {
+      params: filters,
     });
-
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error(
       "Failed to fetch leaves:",
-      error.response?.data || error.message
+      error?.response?.data?.message || error.message
     );
-    throw error;
+    throw new Error(
+      error?.response?.data?.message ||
+        error.message ||
+        "An error occurred while fetching leaves"
+    );
   }
 }

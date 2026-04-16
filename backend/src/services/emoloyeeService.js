@@ -13,8 +13,8 @@ const addEmployee = async (data) => {
   return await createEmployee(data);
 };
 
-const getAllEmployees = async (search) => {
-  return await getEmployees(search);
+const getAllEmployees = async (filters) => {
+  return await getEmployees(filters);
 };
 
 const updateEmployee = async (id, data) => {

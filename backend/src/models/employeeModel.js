@@ -51,7 +51,9 @@ const createEmployee = async (employee) => {
 
   return result.rows[0];
 };
-const getEmployees = async (search) => {
+const getEmployees = async (filters = {}) => {
+  const { search, designation, department, joinFrom, joinTo, status } = filters;
+
   let query = `
     SELECT 
       e.id,
@@ -60,6 +62,7 @@ const getEmployees = async (search) => {
       e.last_name,
       e.salary,
       e.is_active,
+      e.joining_date,
 
       u.name AS user_name,
       u.email AS user_email,
@@ -71,32 +74,77 @@ const getEmployees = async (search) => {
       des.id AS designation_id,
       des.title AS designation_title
 
-     FROM employees e
-     JOIN users u ON e.user_id = u.id
-     LEFT JOIN departments d ON e.department_id = d.id
-     LEFT JOIN designations des ON e.designation_id = des.id
-     WHERE e.is_active IS NOT FALSE
+    FROM employees e
+    JOIN users u ON e.user_id = u.id
+    LEFT JOIN departments d ON e.department_id = d.id
+    LEFT JOIN designations des ON e.designation_id = des.id
+    WHERE e.is_active IS NOT FALSE
   `;
-  const values = [];
 
-  if (search && search.trim() !== "") {
+  const values = [];
+  let idx = 1;
+
+  // 🔍 Search
+  if (search) {
     query += `
       AND (
-        LOWER(e.first_name) LIKE $1 OR
-        LOWER(e.last_name) LIKE $1 OR
-        LOWER(u.email) LIKE $1
+        LOWER(e.first_name) LIKE $${idx} OR
+        LOWER(e.last_name) LIKE $${idx} OR
+        LOWER(u.email) LIKE $${idx}
       )
     `;
-    values.push(`%${search.trim().toLowerCase()}%`);
+    values.push(`%${search.toLowerCase()}%`);
+    idx++;
   }
 
-  const result = await db.query(query, values);
+  // 🏷️ Designation
+  if (designation) {
+    query += ` AND LOWER(des.title) LIKE $${idx}`;
+    values.push(`%${designation.toLowerCase()}%`);
+    idx++;
+  }
 
+  // 🏢 Department
+  if (department) {
+    query += ` AND LOWER(d.name) LIKE $${idx}`;
+    values.push(`%${department.toLowerCase()}%`);
+    idx++;
+  }
+
+  // 📅 Joining date filters
+  if (joinFrom && joinTo) {
+    query += ` AND e.joining_date BETWEEN $${idx} AND $${idx + 1}`;
+    values.push(joinFrom, joinTo);
+    idx += 2;
+  } else if (joinFrom) {
+    query += ` AND e.joining_date >= $${idx}`;
+    values.push(joinFrom);
+    idx++;
+  } else if (joinTo) {
+    query += ` AND e.joining_date <= $${idx}`;
+    values.push(joinTo);
+    idx++;
+  }
+
+  // ✅ Status filter. Accepts "active" or "inactive" (case-insensitive)
+  if (typeof status === "string" && status.trim() !== "") {
+    const normStatus = status.trim().toLowerCase();
+    if (normStatus === "active") {
+      query += ` AND e.is_active = TRUE`;
+    } else if (normStatus === "inactive") {
+      query += ` AND e.is_active = FALSE`;
+    }
+    // If status is invalid string, ignore
+  }
+
+  query += ` ORDER BY e.joining_date DESC`;
+
+  const result = await db.query(query, values);
   return result.rows;
 };
 
 const getEmployeeById = async (userId) => {
-  console.log(userId)
+  console.log(userId);
   const result = await db.query(
     `
     SELECT

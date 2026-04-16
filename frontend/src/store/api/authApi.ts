@@ -1,5 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import login, { signup } from "@/api/loginApi"; // Assume appropriate path aliasing, adjust if needed
+import { refreshAccessToken } from "@/api/refreshTokenApi"; // Adjust path if needed
 
 export interface LoginPayload {
   email: string;
@@ -68,7 +69,34 @@ export const authApi = createApi({
         }
       },
     }),
+    refreshAccessToken: builder.query<{ accessToken: string }, void>({
+      async queryFn() {
+        try {
+          const accessToken = await refreshAccessToken();
+          if (!accessToken) {
+            return {
+              error: {
+                status: 401,
+                data: "Failed to refresh access token",
+              },
+            };
+          }
+          return { data: { accessToken } };
+        } catch (error: any) {
+          return {
+            error: {
+              status: error.response?.status || 500,
+              data: error.response?.data || error.message || "Refresh failed",
+            },
+          };
+        }
+      },
+    }),
   }),
 });
 
-export const { useLoginMutation, useSignupMutation } = authApi;
+export const {
+  useLoginMutation,
+  useSignupMutation,
+  useRefreshAccessTokenQuery,
+} = authApi;

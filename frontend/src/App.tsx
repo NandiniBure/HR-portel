@@ -16,6 +16,7 @@ import { store } from "./store/store";
 import EmployeeApplyLeave from "./pages/LeaveApplication";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EmployeeAttendanceMarking from "./pages/Attendence";
+import ManagerAttendanceDashboard from "./pages/ManageAttendence";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
 
             <Route path="/leave-apply" element={<EmployeeApplyLeave />} />
             <Route path="/attendence" element={<EmployeeAttendanceMarking />} />
+            <Route path="/attendence-manager" element={<ManagerAttendanceDashboard />} />
             <Route path="/payroll" element={<Payroll />} />
             <Route path="/recruitment" element={<Recruitment />} />
             <Route path="/settings" element={<Settings />} />

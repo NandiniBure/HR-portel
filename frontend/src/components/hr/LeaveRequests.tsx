@@ -22,7 +22,7 @@ const LeaveRequests = () => {
         <span className="text-xs font-bold bg-destructive/10 text-destructive px-2 py-1 rounded-full">{pendingLeavesData?.data?.length} pending</span>
       </div>
       <div className="divide-y divide-border">
-        {pendingLeavesData.data.length ? pendingLeavesData?.data?.map((req: any) => (
+        {pendingLeavesData?.data?.length ? pendingLeavesData?.data?.map((req: any) => (
           <div key={req.name} className="px-5 py-4 flex items-center gap-4">
             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold shrink-0">
               {req.employeeName ? req.employeeName.charAt(0).toUpperCase() : ''}

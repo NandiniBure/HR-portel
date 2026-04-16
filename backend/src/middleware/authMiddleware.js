@@ -11,9 +11,8 @@ export const authenticate = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    console.log(decoded);
+    console.log("decodewd",decoded);
     req.user = decoded;
-
     next();
   } catch (error) {
     return res.status(403).json({ message: "Invalid token" });
@@ -22,10 +21,9 @@ export const authenticate = (req, res, next) => {
 
 // Role-based access middleware
 export const authorizeRoles = (...allowedRoles) => {
-  console.log(allowedRoles);
-
+  console.log("---->", allowedRoles);
   return (req, res, next) => {
-    console.log(req.user);
+    console.log("===>", req.user);
     if (!req.user || !req.user.role) {
       return res.status(403).json({ message: "Role not assigned to user" });
     }

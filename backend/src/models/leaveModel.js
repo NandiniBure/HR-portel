@@ -170,13 +170,13 @@ export const fetchAllLeaves = async (filter = {}) => {
   const values = [];
   const whereClauses = [];
 
-  // Filter by status
+  // 🔹 Status filter
   if (filter.status) {
     values.push(filter.status);
     whereClauses.push(`l.status = $${values.length}`);
   }
 
-  // Filter by date overlap
+  // 🔹 Overlap date (existing logic)
   if (filter.overlapsDate) {
     values.push(filter.overlapsDate);
     whereClauses.push(`
@@ -185,12 +185,36 @@ export const fetchAllLeaves = async (filter = {}) => {
     `);
   }
 
-  // Optional employee filter
+  // 🔹 Employee ID
   if (filter.employeeId) {
     values.push(filter.employeeId);
     whereClauses.push(`l.employee_id = $${values.length}`);
   }
 
+  // 🔹 NEW: Date range filter
+  if (filter.dateRange) {
+    const { fromDate, toDate } = filter.dateRange;
+
+    if (fromDate) {
+      values.push(fromDate);
+      whereClauses.push(`l.start_date >= $${values.length}`);
+    }
+
+    if (toDate) {
+      values.push(toDate);
+      whereClauses.push(`l.end_date <= $${values.length}`);
+    }
+  }
+
+  // 🔹 NEW: Employee name search
+  if (filter.employeeName) {
+    values.push(`%${filter.employeeName}%`);
+    whereClauses.push(`
+      LOWER(emp.first_name || ' ' || emp.last_name) LIKE LOWER($${values.length})
+    `);
+  }
+
+  // 🔹 Apply WHERE
   if (whereClauses.length > 0) {
     query += ` WHERE ${whereClauses.join(" AND ")}`;
   }
@@ -223,20 +247,34 @@ export const updateLeaveStatusDB = async ({
          status AS "currentStatus",
          start_date,
          end_date,
-         applied_at,
          EXTRACT(YEAR FROM start_date)::int AS "year"
        FROM leaves
        WHERE id = $1
        FOR UPDATE`,
       [leaveId]
     );
-    const leave = leaveRes.rows[0];
 
-    if (!leave) {
-      throw new Error("Leave not found");
+    const leave = leaveRes.rows[0];
+    if (!leave) throw new Error("Leave not found");
+
+    /**
+     * 🔥 CRITICAL FIX — convert DATE to string to avoid timezone shift
+     */
+    const startDate = leave.start_date.toISOString().split("T")[0];
+    const endDate = leave.end_date.toISOString().split("T")[0];
+
+    const normalizedStatus = status?.trim()?.toUpperCase();
+    const validActions = ["APPROVED", "REJECTED", "CANCELLED", "PENDING"];
+
+    if (!validActions.includes(normalizedStatus)) {
+      throw new Error(
+        `Invalid leave status: ${status}. Must be one of: ${validActions.join(
+          ", "
+        )}`
+      );
     }
 
-    // Update the leave record
+    // Update leave status
     const updateResult = await client.query(
       `UPDATE leaves
        SET
@@ -252,14 +290,20 @@ export const updateLeaveStatusDB = async ({
          approved_by AS "approvedBy",
          approved_at AS "approvedAt",
          rejection_reason AS "rejectionReason"`,
-      [status, approvedBy, rejectionReason, leaveId]
+      [normalizedStatus, approvedBy, rejectionReason, leaveId]
     );
 
-    // If approved and was not already approved, deduct leave balance
+    /**
+     * =========================================================
+     * CASE 1: PENDING → APPROVED
+     * Deduct balance + Insert LEAVE in attendance
+     * =========================================================
+     */
     if (
-      status?.trim()?.toUpperCase() === "APPROVED" &&
+      normalizedStatus === "APPROVED" &&
       leave.currentStatus?.trim()?.toUpperCase() !== "APPROVED"
     ) {
+      // Deduct leave balance
       await client.query(
         `UPDATE leave_balances
          SET
@@ -271,13 +315,40 @@ export const updateLeaveStatusDB = async ({
            AND year = $4`,
         [leave.totalDays, leave.employeeId, leave.leaveTypeId, leave.year]
       );
+
+      // Insert LEAVE rows in attendance (timezone-safe)
+      await client.query(
+        `
+        INSERT INTO attendance (employee_id, date, check_in_time, check_out_time, status, created_at)
+        SELECT
+          $1 AS employee_id,
+          gs::date AS date,
+          NULL AS check_in_time,
+          NULL AS check_out_time,
+          'LEAVE' AS status,
+          CURRENT_TIMESTAMP
+        FROM generate_series($2::date, $3::date, interval '1 day') AS gs
+        ON CONFLICT (employee_id, date)
+        DO UPDATE SET
+          status = 'LEAVE',
+          check_in_time = NULL,
+          check_out_time = NULL
+        `,
+        [leave.employeeId, startDate, endDate] // ✅ FIXED
+      );
     }
 
-    // If previously approved and now rejected/cancelled, restore leave balance
+    /**
+     * =========================================================
+     * CASE 2: APPROVED → REJECTED / CANCELLED
+     * Restore balance + Remove LEAVE from attendance
+     * =========================================================
+     */
     if (
       leave.currentStatus?.trim()?.toUpperCase() === "APPROVED" &&
-      status?.trim()?.toUpperCase() !== "APPROVED"
+      normalizedStatus !== "APPROVED"
     ) {
+      // Restore leave balance
       await client.query(
         `UPDATE leave_balances
          SET
@@ -289,20 +360,20 @@ export const updateLeaveStatusDB = async ({
            AND year = $4`,
         [leave.totalDays, leave.employeeId, leave.leaveTypeId, leave.year]
       );
-    }
 
-    // Insert approval history using valid enum values (UPPERCASE)
-    const validActions = ["APPROVED", "REJECTED", "CANCELLED", "PENDING"];
-    const normalizedStatus = status?.trim()?.toUpperCase();
-
-    if (!validActions.includes(normalizedStatus)) {
-      throw new Error(
-        `Invalid leave approval history action: ${status}. Must be one of: ${validActions.join(
-          ", "
-        )}`
+      // Remove LEAVE rows from attendance (timezone-safe)
+      await client.query(
+        `
+        DELETE FROM attendance
+        WHERE employee_id = $1
+          AND date BETWEEN $2::date AND $3::date
+          AND status = 'LEAVE'
+        `,
+        [leave.employeeId, startDate, endDate] // ✅ FIXED
       );
     }
 
+    // Insert into approval history
     await client.query(
       `INSERT INTO leave_approval_history (
          leave_id,
@@ -312,12 +383,7 @@ export const updateLeaveStatusDB = async ({
          acted_at
        )
        VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
-      [
-        leaveId,
-        normalizedStatus, // Use only valid ENUM value
-        approvedBy,
-        rejectionReason,
-      ]
+      [leaveId, normalizedStatus, approvedBy, rejectionReason]
     );
 
     await client.query("COMMIT");

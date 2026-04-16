@@ -49,9 +49,9 @@ const Auth = () => {
 
   const [loginMutation, { isLoading: isLoginLoading, error: loginError }] = useLoginMutation();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    loginMutation({ email: loginData.email, password: loginData.password })
+    await loginMutation({ email: loginData.email, password: loginData.password })
     navigate("/")
   };
 
@@ -75,7 +75,7 @@ const Auth = () => {
       employment_type: signupData.employmentType,
       salary: signupData.salary,
     });
-    toast({ title: "Signup functionality", description: "Backend not connected yet. Enable Lovable Cloud to add real authentication." });
+
     navigate("/");
   };
 

@@ -1,57 +1,134 @@
-import { CalendarDays, Check, X, Filter } from "lucide-react";
+import { CalendarDays, Check, X, Filter, Search } from "lucide-react";
 import HRLayout from "@/components/hr/HRLayout";
 import { Badge } from "@/components/ui/badge";
 import { useGetAllLeavesQuery, useUpdateLeaveStatusMutation } from "@/store/api/leaveApi";
-
+import React, { useState } from "react";
 
 const statusStyles: Record<string, string> = {
-  Pending: "bg-warning/10 text-warning border-warning/20",
-  Approved: "bg-success/10 text-success border-success/20",
-  Rejected: "bg-destructive/10 text-destructive border-destructive/20",
+  // For the table mapped status
+  PENDING: "bg-warning/10 text-warning border-warning/20",
+  APPROVED: "bg-success/10 text-success border-success/20",
+  REJECTED: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
-const leaveBalance = [
-  { type: "Annual Leave", total: 20, used: 8, color: "bg-primary" },
-  { type: "Sick Leave", total: 10, used: 3, color: "bg-warning" },
-  { type: "Personal", total: 5, used: 2, color: "bg-info" },
-];
+
+
+const defaultFilters = {
+  employeeName: "",
+  employeeId: "",
+  status: "",
+  fromDate: "",
+  toDate: "",
+  overlapsDate: "",
+};
 
 const LeaveManagement = () => {
 
-
-  const { data: allLeaves, isLoading: loadingLeaves, error: leavesError } = useGetAllLeavesQuery();
   const [updateLeaveStatus, { isLoading: updatingStatus }] = useUpdateLeaveStatusMutation();
 
+  const [filters, setFilters] = useState(defaultFilters);
+
   const handleApproval = ({ leaveId, status }: any) => {
-    updateLeaveStatus({ leaveId, status })
-  }
+    updateLeaveStatus({ leaveId, status });
+  };
+
+  const { data: allLeaves, isLoading: loadingLeaves, error: leavesError } = useGetAllLeavesQuery(filters);
+
 
   return (
     <HRLayout title="Leave Management" subtitle="Track and manage employee leave requests.">
       <div className="space-y-6">
-        {/* Balance Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {leaveBalance.map((item) => (
-            <div key={item.type} className="bg-card rounded-xl p-5 shadow-[var(--shadow-card)] border border-border">
-              <p className="text-sm text-muted-foreground font-medium mb-3">{item.type}</p>
-              <div className="flex items-end justify-between mb-3">
-                <span className="text-2xl font-bold text-card-foreground">{item.used}/{item.total}</span>
-                <span className="text-xs text-muted-foreground">{item.total - item.used} remaining</span>
-              </div>
-              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                <div className={`h-full rounded-full ${item.color}`} style={{ width: `${(item.used / item.total) * 100}%` }} />
+
+        <div className="bg-card border border-border rounded-xl p-5 shadow-[var(--shadow-card)] 
+flex flex-col gap-5 transition-all duration-300">
+
+          {/* Row 1 */}
+          <div className="flex flex-col md:flex-row gap-4 md:items-end">
+
+            {/* Search Employee */}
+            <div className="flex flex-col gap-1 w-full md:w-72">
+              <label className="text-xs text-muted-foreground ml-1">Employee Name</label>
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search by name..."
+                  value={filters.employeeName}
+                  onChange={(e) =>
+                    setFilters({ ...filters, employeeName: e.target.value })
+                  }
+                  className="pl-9 pr-4 py-2 bg-background rounded-lg text-sm border border-border focus:ring-2 focus:ring-ring w-full"
+                />
               </div>
             </div>
-          ))}
+
+
+            {/* Status */}
+            <div className="flex flex-col gap-1 w-full md:w-48">
+              <label className="text-xs text-muted-foreground ml-1">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) =>
+                  setFilters({ ...filters, status: e.target.value })
+                }
+                className="px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-2 focus:ring-ring"
+              >
+                <option value="">All</option>
+                <option value="APPROVED">Approved</option>
+                <option value="PENDING">Pending</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Row 2 */}
+          <div className="flex flex-col md:flex-row gap-4 md:items-end">
+
+            {/* From Date */}
+            <div className="flex flex-col gap-1 w-full md:w-48">
+              <label className="text-xs text-muted-foreground ml-1">From Date</label>
+              <input
+                type="date"
+                value={filters.fromDate}
+                onChange={(e) =>
+                  setFilters({ ...filters, fromDate: e.target.value })
+                }
+                className="px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
+            {/* To Date */}
+            <div className="flex flex-col gap-1 w-full md:w-48">
+              <label className="text-xs text-muted-foreground ml-1">To Date</label>
+              <input
+                type="date"
+                value={filters.toDate}
+                onChange={(e) =>
+                  setFilters({ ...filters, toDate: e.target.value })
+                }
+                className="px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
+
+
+            {/* Clear Button */}
+            <div className="w-full md:w-auto">
+              <button
+                onClick={() => setFilters({ ...defaultFilters })}
+                className="px-4 py-2 rounded-md text-sm border border-border bg-muted hover:bg-muted/70 transition"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Requests Table */}
         <div className="bg-card rounded-xl shadow-[var(--shadow-card)] border border-border overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
             <h3 className="font-semibold text-card-foreground">All Leave Requests</h3>
-            <button className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted rounded-lg transition-colors">
-              <Filter className="w-4 h-4" /> Filter
-            </button>
+          
           </div>
           <table className="w-full">
             <thead>
@@ -75,7 +152,6 @@ const LeaveManagement = () => {
                           : ""}
                       </div>
                       <span className="text-sm font-medium text-card-foreground">{req.employeeName}</span>
-
                     </div>
                   </td>
                   <td className="px-5 py-3.5 text-sm text-muted-foreground">{req.leaveType}</td>
@@ -92,13 +168,31 @@ const LeaveManagement = () => {
                   </td>
 
                   <td className="px-5 py-3.5 text-sm text-muted-foreground">{req.totalDays}</td>
-                  <td className="px-5 py-3.5"><Badge variant="outline" className={statusStyles[req.status]}>{req.status}</Badge></td>
+                  <td className="px-5 py-3.5">
+                    <Badge
+                      variant="outline"
+                      className={statusStyles[req.status]}
+                    >
+                      {req.status}
+                    </Badge>
+                  </td>
                   <td className="px-5 py-3.5">
                     {req.status === "PENDING" && (
                       <div className="flex items-center justify-center gap-1.5">
                         <button
-                          onClick={() => handleApproval({ leaveId: req.leaveId, status: "APPROVED" })} className="w-7 h-7 rounded-md bg-success/10 flex items-center justify-center hover:bg-success/20 transition-colors"><Check className="w-3.5 h-3.5 text-success" /></button>
-                        <button  onClick={() => handleApproval({ leaveId: req.leaveId, status: "REJECTED" })} className="w-7 h-7 rounded-md bg-destructive/10 flex items-center justify-center hover:bg-destructive/20 transition-colors"><X className="w-3.5 h-3.5 text-destructive" /></button>
+                          onClick={() => handleApproval({ leaveId: req.leaveId, status: "APPROVED" })}
+                          className="w-7 h-7 rounded-md bg-success/10 flex items-center justify-center hover:bg-success/20 transition-colors"
+                          disabled={updatingStatus}
+                        >
+                          <Check className="w-3.5 h-3.5 text-success" />
+                        </button>
+                        <button
+                          onClick={() => handleApproval({ leaveId: req.leaveId, status: "REJECTED" })}
+                          className="w-7 h-7 rounded-md bg-destructive/10 flex items-center justify-center hover:bg-destructive/20 transition-colors"
+                          disabled={updatingStatus}
+                        >
+                          <X className="w-3.5 h-3.5 text-destructive" />
+                        </button>
                       </div>
                     )}
                   </td>

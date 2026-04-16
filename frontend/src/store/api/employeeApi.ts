@@ -7,13 +7,13 @@ export interface GetEmployeeByIdPayload {
 }
 
 export interface Employee {
-  // Update these fields based on expected API response
   id: string;
   first_name: string;
   last_name: string;
   email: string;
-  // Add additional fields if needed
 }
+
+const TAGS = ["Employee"];
 
 export const employeeApi = createApi({
   reducerPath: "employeeApi",
@@ -21,11 +21,12 @@ export const employeeApi = createApi({
     // baseQuery not used, custom endpoint below
     return { error: { status: 500, data: "Not Implemented" } };
   },
+  tagTypes: TAGS,
   endpoints: (builder) => ({
-    getEmployeeById: builder.query<Employee, GetEmployeeByIdPayload>({
-      async queryFn(getEmployeePayload: GetEmployeeByIdPayload) {
+    getEmployeeById: builder.query<Employee, void>({
+      async queryFn() {
         try {
-          const data = await fetchEmployeeById(getEmployeePayload);
+          const data = await fetchEmployeeById();
           return { data };
         } catch (error: any) {
           return {
@@ -39,20 +40,18 @@ export const employeeApi = createApi({
           };
         }
       },
+      providesTags: (result) =>
+        result
+          ? [{ type: "Employee" }]
+          : [{ type: "Employee" }],
     }),
-    getAllEmployees: builder.query<Employee[], { search?: string } | void>({
-      async queryFn(arg) {
+    getAllEmployees: builder.query<Employee[], { search?: string; department?: string; designation?: string; status?: string; joinedFrom?: string; joinedTo?: string } | void>({
+      async queryFn(filters = {}) {
         try {
-          console.log(arg);
-          const data = await getAllEmployeesApi(
-            typeof arg === "string"
-              ? arg
-              : undefined
-          );
-     
+          // Pass filters (including search) as object to getAllEmployeesApi
+          const data = await getAllEmployeesApi(filters);
           return { data };
         } catch (error: any) {
-
           return {
             error: {
               status: error.response?.status || 500,
@@ -64,6 +63,16 @@ export const employeeApi = createApi({
           };
         }
       },
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map((emp) => ({
+                type: "Employee" as const,
+                id: emp.id,
+              })),
+              { type: "Employee" },
+            ]
+          : [{ type: "Employee" }],
     }),
   }),
 });

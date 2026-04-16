@@ -17,7 +17,7 @@ const HRLayout = ({ title, subtitle, children }: HRLayoutProps) => {
             <h2 className="text-xl font-bold text-foreground">{title}</h2>
             <p className="text-sm text-muted-foreground">{subtitle}</p>
           </div>
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -30,7 +30,7 @@ const HRLayout = ({ title, subtitle, children }: HRLayoutProps) => {
               <Bell className="w-5 h-5 text-muted-foreground" />
               <span className="absolute top-2 right-2.5 w-2 h-2 bg-destructive rounded-full" />
             </button>
-          </div>
+          </div> */}
         </header>
         <div className="p-8">{children}</div>
       </main>

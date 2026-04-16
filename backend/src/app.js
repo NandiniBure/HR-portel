@@ -10,15 +10,25 @@ import payrollRoutes from "./routes/payrollRoute.js";
 import departmentRoutes from "./routes/departmentRoute.js";
 import designationRoutes from "./routes/designationRoute.js";
 import masterRoutes from "./routes/masterRoutes.js";
+import cookieParser from "cookie-parser";
 const app = express();
 
 /* ---------------- Middleware ---------------- */
 
 app.use(express.json());
-app.use(cors());
-app.use(helmet());
+app.use(
+  cors({
+    origin: "http://localhost:8080", // 🔁 change to your frontend URL
+    credentials: true,
+  })
+);
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 app.use(morgan("dev"));
-
+app.use(cookieParser()); // ✅ REQUIRED
 app.use("/api/payroll", payrollRoutes);
 app.use("/api", attendanceRoute);
 app.use("/api", leavesRoute);

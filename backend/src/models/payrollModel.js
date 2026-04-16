@@ -68,3 +68,37 @@ export const getPayrollByEmployee = async (employee_id) => {
   );
   return result.rows;
 };
+export const getPayrolls = async () => {
+  const { rows } = await db.query(`
+    SELECT 
+      p.id AS "id",
+      p.employee_id AS "employeeId",
+      p.month AS "month",
+      p.basic_salary AS "basicSalary",
+      p.bonus AS "bonus",
+      p.deductions AS "deductions",
+      p.net_salary AS "netSalary",
+
+      e.first_name AS "firstName",
+      e.last_name AS "lastName",
+      e.salary AS "salary",
+      e.phone AS "phone",
+      e.department_id AS "departmentId",
+      e.designation_id AS "designationId"
+    FROM payroll p
+    JOIN employees e 
+      ON p.employee_id = e.id
+  `);
+
+  const summary = await db.query(`
+    SELECT 
+      SUM(net_salary) AS "totalPayroll",
+      AVG(net_salary) AS "avgPayroll"
+    FROM payroll
+  `);
+
+  return {
+    payrolls: rows,
+    summary: summary.rows[0],
+  };
+};

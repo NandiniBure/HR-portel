@@ -1,10 +1,13 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import cookieParser from "cookie-parser";
 import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
-import { registerUser, findUserByEmail } from "../services/authService.js";
 import db from "../config/db.js";
 
+// ================= SIGNUP =================
 export const signup = async (req, res) => {
+  let transactionStarted = false;
+
   try {
     const {
       name,
@@ -20,7 +23,14 @@ export const signup = async (req, res) => {
       salary,
     } = req.body;
 
-    // check if user already exists
+    // ✅ Validate required fields
+    if (!email || !password || !first_name) {
+      return res.status(400).json({
+        error: "Missing required fields",
+      });
+    }
+
+    // ✅ Check if user exists
     const existingUser = await db.query(
       `SELECT id FROM users WHERE email = $1`,
       [email]
@@ -32,21 +42,17 @@ export const signup = async (req, res) => {
       });
     }
 
-    // hash password
+    // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // start transaction
+    // ✅ Start transaction
     await db.query("BEGIN");
+    transactionStarted = true;
 
-    // create user
+    // ✅ Create user
     const userResult = await db.query(
       `
-      INSERT INTO users (
-        name,
-        email,
-        password,
-        role
-      )
+      INSERT INTO users (name, email, password, role)
       VALUES ($1, $2, $3, $4)
       RETURNING id, name, email, role
       `,
@@ -55,7 +61,7 @@ export const signup = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // create employee
+    // ✅ Create employee
     const employeeResult = await db.query(
       `
       INSERT INTO employees (
@@ -75,17 +81,17 @@ export const signup = async (req, res) => {
         user.id,
         first_name,
         last_name,
-        department_id,
-        designation_id,
-        joining_date,
-        employment_type,
-        salary,
+        department_id || null,
+        designation_id || null,
+        joining_date || null,
+        employment_type || null,
+        salary || 0,
       ]
     );
 
     const employee = employeeResult.rows[0];
 
-    // initialize leave balances for this employee
+    // ✅ Initialize leave balances
     await db.query(
       `
       INSERT INTO leave_balances (
@@ -109,7 +115,7 @@ export const signup = async (req, res) => {
       [employee.id]
     );
 
-    // commit transaction
+    // ✅ Commit
     await db.query("COMMIT");
 
     return res.status(201).json({
@@ -118,7 +124,12 @@ export const signup = async (req, res) => {
       employee,
     });
   } catch (error) {
-    await db.query("ROLLBACK");
+    // ✅ Safe rollback
+    if (transactionStarted) {
+      await db.query("ROLLBACK");
+    }
+
+    console.error("Signup Error:", error);
 
     return res.status(500).json({
       error: error.message,
@@ -126,73 +137,98 @@ export const signup = async (req, res) => {
   }
 };
 
+// ================= LOGIN =================
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await findUserByEmail(email);
+    // ✅ Fetch user WITH password
+    const result = await db.query(
+      `SELECT * FROM users WHERE email = $1`,
+      [email]
+    );
 
-    if (!user) return res.status(401).json({ message: "User not found" });
+    const user = result.rows[0];
 
-    // Debugging why user password is not matching
-    console.log("User password from DB (hashed):", user.password);
-    console.log("Password submitted:", password);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
 
+    // ✅ Compare password
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      console.error("Password mismatch. Hash check failed.");
-    } else {
-      console.log("Password matched.");
+      return res.status(401).json({ message: "Invalid password" });
     }
 
-    if (!isMatch) return res.status(401).json({ message: "Invalid password" });
-
-
+    // ✅ Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
+    // ✅ Set cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: "strict",
+      secure: false, // localhost
+      sameSite: "lax", // 🔴 CHANGE THIS
+      path: "/", // 🔴 add this
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.json({
+    console.log(user);
+
+    return res.json({
       accessToken,
       user: {
         id: user.id,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Login Error:", error);
+
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 };
 
+// ================= REFRESH TOKEN =================
 export const refreshToken = (req, res) => {
-  const token = req.cookies.refreshToken;
+  try {
+    const token = req.cookies?.refreshToken;
 
-  if (!token) return res.status(401).json({ message: "No refresh token" });
+    if (!token) {
+      return res.status(401).json({ message: "No refresh token" });
+    }
 
-  jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: "Invalid token" });
+    jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        return res.status(403).json({ message: "Invalid token" });
+      }
 
-    const accessToken = jwt.sign(
-      { id: user.id },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" }
-    );
+      const accessToken = jwt.sign(
+        { id: user.id },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "15m" }
+      );
 
-    res.json({ accessToken });
-  });
+      return res.json({ accessToken });
+    });
+  } catch (error) {
+    console.error("Refresh Token Error:", error);
+
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
 };
 
+// ================= LOGOUT =================
 export const logout = (req, res) => {
   res.clearCookie("refreshToken");
 
-  res.json({
+  return res.json({
     message: "Logged out",
   });
 };

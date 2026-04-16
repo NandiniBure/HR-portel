@@ -1,28 +1,77 @@
 import HRLayout from "@/components/hr/HRLayout";
+import { useCheckInMutation, useCheckOutMutation, useGetEmployeeAttendanceQuery } from "@/store/api/attendenceApi";
+import { useGetEmployeeByIdQuery } from "@/store/api/employeeApi";
+import { useGetEmployeesOnLeaveTodayQuery } from "@/store/api/leaveApi";
+import { useEffect, useState } from "react";
 
 export default function EmployeeAttendanceMarking() {
-    const attendanceHistory = [
-        {
-            date: "09 Apr 2026",
-            checkIn: "09:12 AM",
-            checkOut: "06:18 PM",
-            status: "Present",
-        },
-        {
-            date: "08 Apr 2026",
-            checkIn: "09:05 AM",
-            checkOut: "06:02 PM",
-            status: "Present",
-        },
-        {
-            date: "07 Apr 2026",
-            checkIn: "--",
-            checkOut: "--",
-            status: "Absent",
-        },
-    ];
+    const {
+        data: employeeData,
+        isLoading: isEmployeeLoading,
+        error: employeeError,
+    } = useGetEmployeeByIdQuery();
 
-    const todayStatus = "Checked In";
+    const { data: employeesOnLeaveToday, isLoading: isLoadingEmployeesOnLeaveToday, error: employeesOnLeaveTodayError } = useGetEmployeesOnLeaveTodayQuery();
+
+
+    const [checkIn, { isLoading: isCheckingIn, error: checkInError, data: checkInData }] = useCheckInMutation();
+
+    const [checkOut, { isLoading: isCheckingOut, error: checkOutError, data: checkOutData }] = useCheckOutMutation();
+
+
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    const employeeId = employeeData?.employee_id;
+
+    const {
+        data: employeeAttendance,
+        isLoading: isEmployeeAttendanceLoading,
+        error: employeeAttendanceError
+    } = useGetEmployeeAttendanceQuery(
+        { employeeId, date: today },
+        {
+            skip: !employeeId // Only run when employeeId is available
+        }
+    );
+
+    const [time, setTime] = useState(new Date());
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTime(new Date());
+        }, 1000); // update every second
+
+        return () => clearInterval(interval); // cleanup
+    }, []);
+
+
+    const handleCheckIn = async () => {
+        // Handle errors from API during check-in
+        try {
+            const res = await checkIn({ employeeId: employeeData?.employee_id }); // use 'id' instead of 'employee_id'
+            if (res && !res.error) {
+                console.log("Check-in successful:", res);
+            }
+        } catch (error) {
+            console.error("Check-in failed:", error);
+            // Optionally: display error to user with toast or similar
+        }
+    }
+
+    const handleCheckOut = async () => {
+        // Handle errors from API during check-out
+        try {
+            const res = await checkOut({ employeeId: employeeData?.employee_id }); // use 'id' instead of 'employee_id'
+            if (res && !res.error) {
+                console.log("Check-out successful:", res);
+            }
+        } catch (error) {
+            console.error("Check-out failed:", error);
+            // Optionally: display error to user with toast or similar
+        }
+    }
+
+    console.log(employeeAttendance?.data)
 
     return (
         <HRLayout title="Dashboard" subtitle="Welcome back, Jane. Here's what's happening today.">
@@ -56,9 +105,88 @@ export default function EmployeeAttendanceMarking() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-card-foreground">{todayStatus}</p>
-                                    <p className="text-xs text-muted-foreground">You checked in at 09:12 AM</p>
+                                    {employeeAttendance?.data[0]?.check_out_time ? (
+                                        <>
+                                            <p className="font-semibold text-card-foreground text-green-700 flex items-center gap-1">
+                                                Checked Out
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="h-4 w-4 text-green-600"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M5 13l4 4L19 7"
+                                                    />
+                                                </svg>
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                You checked out at{" "}
+                                                {new Date(employeeAttendance.data[0].check_out_time).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    hour12: true
+                                                })}
+                                            </p>
+                                        </>
+                                    ) : employeeAttendance?.data[0]?.check_in_time ? (
+                                        <>
+                                            <p className="font-semibold text-card-foreground text-yellow-700 flex items-center gap-1">
+                                                Checked In
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="h-4 w-4 text-yellow-500"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M5 13l4 4L19 7"
+                                                    />
+                                                </svg>
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                You checked in at{" "}
+                                                {new Date(employeeAttendance.data[0].check_in_time).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    hour12: true
+                                                })}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="font-semibold text-card-foreground text-gray-700 flex items-center gap-1">
+                                                Not Checked In
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="h-4 w-4 text-gray-400"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M6 18L18 6M6 6l12 12"
+                                                    />
+                                                </svg>
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                You have not checked in yet.
+                                            </p>
+                                        </>
+                                    )}
                                 </div>
+
                             </div>
                         </div>
 
@@ -70,7 +198,21 @@ export default function EmployeeAttendanceMarking() {
 
                         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                             <p className="text-sm text-muted-foreground">Working Hours Today</p>
-                            <p className="mt-3 text-3xl font-bold text-card-foreground">07h 14m</p>
+                            <p className="mt-3 text-3xl font-bold text-card-foreground">
+                                {employeeAttendance?.data[0]?.check_in_time
+                                    ? (() => {
+                                        const checkIn = new Date(employeeAttendance.data[0].check_in_time);
+                                        const now = new Date();
+                                        const diffMs = now.getTime() - checkIn.getTime();
+                                        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                                        const minutes = Math.floor((diffMs / (1000 * 60)) % 60);
+                                        return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")} hrs`;
+                                    })()
+                                    : "--:--"
+                                }
+                            </p>
+
+
                             <p className="text-xs text-muted-foreground mt-1">Updated live</p>
                         </div>
                     </div>
@@ -85,10 +227,12 @@ export default function EmployeeAttendanceMarking() {
                             </div>
 
                             <div className="flex gap-3">
-                                <button className="h-11 px-6 rounded-xl bg-primary text-primary-foreground font-medium hover:opacity-90 transition">
+                                <button
+                                    onClick={handleCheckIn} className="h-11 px-6 rounded-xl bg-primary text-primary-foreground font-medium hover:opacity-90 transition">
                                     Check In
                                 </button>
-                                <button className="h-11 px-6 rounded-xl border border-border bg-muted/40 text-card-foreground font-medium hover:bg-muted transition">
+                                <button
+                                    onClick={handleCheckOut} className="h-11 px-6 rounded-xl border border-border bg-muted/40 text-card-foreground font-medium hover:bg-muted transition">
                                     Check Out
                                 </button>
                             </div>
@@ -97,23 +241,45 @@ export default function EmployeeAttendanceMarking() {
                         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="rounded-2xl border border-border bg-muted/20 p-5">
                                 <p className="text-sm text-muted-foreground">Current Time</p>
-                                <p className="mt-2 text-4xl font-bold text-card-foreground">09:32 AM</p>
-                                <p className="mt-2 text-sm text-muted-foreground">Thursday, 09 April 2026</p>
+                                {`${((time.getHours() % 12) || 12).toString().padStart(2, "0")}:${time.getMinutes().toString().padStart(2, "0")} ${time.getHours() >= 12 ? "PM" : "AM"}`}
+
+
+
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    {new Date().toLocaleDateString(undefined, {
+                                        weekday: "long",
+                                        day: "2-digit",
+                                        month: "long",
+                                        year: "numeric"
+                                    })}
+                                </p>
+
                             </div>
 
                             <div className="rounded-2xl border border-border bg-muted/20 p-5 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-muted-foreground">Check In</span>
-                                    <span className="font-semibold text-card-foreground">09:12 AM</span>
+                                    <span className="font-semibold text-card-foreground">{
+                                        employeeAttendance?.data[0]?.check_in_time
+                                            ? new Date(employeeAttendance.data[0].check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+                                            : ""
+                                    }</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-muted-foreground">Check Out</span>
-                                    <span className="font-semibold text-card-foreground">--</span>
+                                    <span className="font-semibold text-card-foreground">
+                                        {
+                                            employeeAttendance?.data[0]?.check_out_time
+                                                ? new Date(employeeAttendance.data[0].check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+                                                : "--"
+                                        }
+                                    </span>
+
                                 </div>
-                                <div className="flex items-center justify-between">
+                                {/* <div className="flex items-center justify-between">
                                     <span className="text-sm text-muted-foreground">Break Time</span>
                                     <span className="font-semibold text-card-foreground">00h 18m</span>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </div>
@@ -143,14 +309,29 @@ export default function EmployeeAttendanceMarking() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {attendanceHistory.map((item, index) => (
+                                    {employeeAttendance?.data?.map((item: any, index: number) => (
                                         <tr
                                             key={index}
                                             className="border-b border-border last:border-none hover:bg-muted/20 transition"
                                         >
-                                            <td className="px-6 py-4 text-sm text-card-foreground">{item.date}</td>
-                                            <td className="px-6 py-4 text-sm text-card-foreground">{item.checkIn}</td>
-                                            <td className="px-6 py-4 text-sm text-card-foreground">{item.checkOut}</td>
+                                            <td className="px-6 py-4 text-sm text-card-foreground">
+                                                {item.date
+                                                    ? new Date(item.date).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+                                                    : "--"}
+                                            </td>
+
+                                            <td className="px-6 py-4 text-sm text-card-foreground">
+                                                {item.check_in_time
+                                                    ? new Date(item.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+                                                    : "--"}
+                                            </td>
+
+                                            <td className="px-6 py-4 text-sm text-card-foreground">
+                                                {item.check_out_time
+                                                    ? new Date(item.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+                                                    : "--"}
+                                            </td>
+
                                             <td className="px-6 py-4">
                                                 <span
                                                     className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${item.status === "Present"
@@ -171,4 +352,5 @@ export default function EmployeeAttendanceMarking() {
             </div>
         </HRLayout>
     );
+
 }

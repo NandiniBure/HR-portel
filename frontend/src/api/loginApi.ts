@@ -5,16 +5,14 @@ export default async function login({ email, password }) {
     console.log(email, password);
     const response = await axios.post(
       "http://localhost:5000/api/auth/login",
+      { email, password },
       {
-        email,
-        password,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true, // 🔴 REQUIRED
       }
     );
+
+    console.log(response.data.accessToken);
 
     localStorage.setItem("token", response.data.accessToken);
     localStorage.setItem("userId", response.data.user.id);
@@ -57,6 +55,7 @@ export async function signup({
       {
         headers: {
           "Content-Type": "application/json",
+          withCredentials: true, // 🔴 REQUIRED
         },
       }
     );

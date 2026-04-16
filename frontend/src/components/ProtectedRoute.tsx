@@ -14,8 +14,7 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
     isLoading: isEmployeeLoading,
     error: employeeError,
   } = useGetEmployeeByIdQuery(
-    { userId: userId || "" },
-    { skip: !userId }
+   
   );
 
   // If loading employee details, you can display a loading spinner or null

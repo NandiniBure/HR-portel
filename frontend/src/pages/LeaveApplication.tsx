@@ -12,9 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useApplyLeaveMutation, useGetLeaveBalanceQuery } from "@/store/api/leaveApi";
-
-
+import { useApplyLeaveMutation, useGetEmployeesOnLeaveTodayQuery, useGetLeaveBalanceQuery } from "@/store/api/leaveApi";
 const leaveTypes = [
   { id: 1, name: "Sick Leave" },
   { id: 2, name: "Annual Leave" },
@@ -40,7 +38,6 @@ const EmployeeApplyLeave = () => {
     applyLeave,
     { isLoading: isApplyingLeave, error: applyLeaveError, data: applyLeaveData },
   ] = useApplyLeaveMutation();
-
 
   const currentYear = new Date().getFullYear();
   const { data: liveBalance, isLoading: isLoadingBalance, error: balanceError } = useGetLeaveBalanceQuery(currentYear);
@@ -86,7 +83,6 @@ const EmployeeApplyLeave = () => {
     }
   };
 
-  console.log(liveBalance?.data)
 
   // Renders balance leaves at the top
   function renderBalanceLeaves() {
@@ -125,7 +121,7 @@ const EmployeeApplyLeave = () => {
             </div>
           );
         })}
-  
+
       </div>
 
     );
