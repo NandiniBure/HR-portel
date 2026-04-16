@@ -2,7 +2,9 @@ import axios from "axios";
 
 export const fetchDepartments = async () => {
   try {
-    const response = await axios.get("http://localhost:5000/api/departments");
+    const response = await axios.get(
+      `${import.meta.env.VITE_BASE_URL}departments`
+    );
     return response.data;
   } catch (error: any) {
     throw new Error(
@@ -15,7 +17,9 @@ export const fetchDepartments = async () => {
 
 export const fetchDesignations = async () => {
   try {
-    const response = await axios.get("http://localhost:5000/api/designations");
+    const response = await axios.get(
+      `${import.meta.env.VITE_BASE_URL}designations`
+    );
     return response.data;
   } catch (error: any) {
     throw new Error(

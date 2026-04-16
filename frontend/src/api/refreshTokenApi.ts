@@ -2,9 +2,12 @@ import axios from "axios";
 
 export const refreshAccessToken = async (): Promise<string | null> => {
   try {
-    const response = await axios.get("http://localhost:5000/api/auth/refresh", {
-      withCredentials: true, // 🔴 sends refresh cookie
-    });
+    const response = await axios.get(
+      `${import.meta.env.VITE_BASE_URL}auth/refresh`,
+      {
+        withCredentials: true, // 🔴 sends refresh cookie
+      }
+    );
 
     const data = response.data;
 
