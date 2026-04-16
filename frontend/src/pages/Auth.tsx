@@ -13,15 +13,6 @@ import { useLoginMutation, useSignupMutation } from "@/store/api/authApi";
 import { useGetDepartmentsQuery, useGetDesignationsQuery } from "@/store/api/masterApi";
 
 
-
-const designations = [
-  { id: 1, name: "Junior" },
-  { id: 2, name: "Mid-Level" },
-  { id: 3, name: "Senior" },
-  { id: 4, name: "Lead" },
-  { id: 5, name: "Manager" },
-];
-
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -243,7 +234,7 @@ const Auth = () => {
                           <SelectValue placeholder="Select dept" />
                         </SelectTrigger>
                         <SelectContent>
-                          {departmentsData?.data?.map((d: any) => (
+                          {departmentsData?.map((d: any) => (
                             <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
                           ))}
                         </SelectContent>
@@ -256,7 +247,7 @@ const Auth = () => {
                           <SelectValue placeholder="Select level" />
                         </SelectTrigger>
                         <SelectContent>
-                          {designationsData?.data?.map((d: any) => (
+                          {designationsData?.map((d: any) => (
                             <SelectItem key={d.id} value={String(d.id)}>{d.title}</SelectItem>
                           ))}
                         </SelectContent>
