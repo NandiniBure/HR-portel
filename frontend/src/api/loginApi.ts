@@ -4,7 +4,7 @@ export default async function login({ email, password }) {
   try {
     console.log(email, password);
     const response = await axios.post(
-      "http://localhost:5000/api/auth/login",
+      `https://hr-portel.vercel.app/api/auth/login`,
       { email, password },
       {
         headers: { "Content-Type": "application/json" },

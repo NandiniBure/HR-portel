@@ -52,7 +52,7 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     await loginMutation({ email: loginData.email, password: loginData.password })
-    navigate("/")
+    // navigate("/")
   };
 
   const handleSignup = (e: React.FormEvent) => {
@@ -245,7 +245,7 @@ const Auth = () => {
                           <SelectValue placeholder="Select dept" />
                         </SelectTrigger>
                         <SelectContent>
-                          {departmentsData?.data.map((d: any) => (
+                          {departmentsData?.data?.map((d: any) => (
                             <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
                           ))}
                         </SelectContent>

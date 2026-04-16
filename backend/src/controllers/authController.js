@@ -143,10 +143,9 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     // ✅ Fetch user WITH password
-    const result = await db.query(
-      `SELECT * FROM users WHERE email = $1`,
-      [email]
-    );
+    const result = await db.query(`SELECT * FROM users WHERE email = $1`, [
+      email,
+    ]);
 
     const user = result.rows[0];
 
@@ -168,12 +167,11 @@ export const login = async (req, res) => {
     // ✅ Set cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, // localhost
-      sameSite: "lax", // 🔴 CHANGE THIS
-      path: "/", // 🔴 add this
+      secure: true, // 🔥 MUST for HTTPS (Vercel)
+      sameSite: "None", // 🔥 MUST for cross-site
+      path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-
     console.log(user);
 
     return res.json({
