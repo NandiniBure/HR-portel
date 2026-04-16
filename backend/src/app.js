@@ -26,7 +26,15 @@ app.use(
   })
 );
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:8080", // local frontend
+      "https://your-frontend.vercel.app", // deployed frontend
+    ],
+    credentials: true,
+  })
+);
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
