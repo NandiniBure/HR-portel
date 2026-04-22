@@ -4,7 +4,7 @@ export default async function login({ email, password }) {
   try {
     console.log(email, password);
     const response = await axios.post(
-      `https://hr-portel.vercel.app/api/auth/login`,
+      `${import.meta.env.VITE_BASE_URL}auth/login`,
       { email, password },
       {
         headers: { "Content-Type": "application/json" },

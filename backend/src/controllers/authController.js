@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import cookieParser from "cookie-parser";
 import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
 import db from "../config/db.js";
 
@@ -164,16 +163,13 @@ export const login = async (req, res) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    // ✅ Set cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true, // 🔥 MUST for HTTPS (Vercel)
-      sameSite: "None", // 🔥 MUST for cross-site
+      secure: true, // 🔥 REQUIRED on HTTPS (Vercel)
+      sameSite: "None", // 🔥 REQUIRED for cross-site (frontend != backend domain)
       path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    console.log(user);
-
     return res.json({
       accessToken,
       user: {
@@ -224,7 +220,7 @@ export const refreshToken = (req, res) => {
 
 // ================= LOGOUT =================
 export const logout = (req, res) => {
-  res.clearCookie("refreshToken");
+  // res.clearCookie("refreshToken");
 
   return res.json({
     message: "Logged out",
