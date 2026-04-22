@@ -163,13 +163,16 @@ export const login = async (req, res) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true, // 🔥 REQUIRED on HTTPS (Vercel)
-      sameSite: "None", // 🔥 REQUIRED for cross-site (frontend != backend domain)
+      secure: isProd,
+      sameSite: isProd ? "None" : "Lax",
       path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+
     return res.json({
       accessToken,
       user: {
