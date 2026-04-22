@@ -8,81 +8,82 @@ A scalable and production-ready **HR Management Portal** built to streamline emp
 
 The HR Portal is a full-stack web application designed to manage:
 
-- Employee records
-- Recruitment pipelines
-- Role-based access control
-- Internal HR workflows
+- Employee records  
+- Recruitment pipelines  
+- Role-based access control  
+- Internal HR workflows  
 
-It focuses on **performance, scalability, and clean architecture**, making it suitable for real-world SaaS environments.
+Built with a focus on **performance, scalability, and clean architecture**.
 
 ---
 
 ## 🧠 Tech Stack
 
 ### 🔹 Frontend
-- React.js / Next.js
-- TypeScript
-- Tailwind CSS / CSS Modules
-- Redux Toolkit / Context API
+- React.js / Next.js  
+- TypeScript  
+- Tailwind CSS  
+- Redux Toolkit / Context API  
 
 ### 🔹 Backend
-- Node.js
-- Express.js
-- TypeScript
+- Node.js  
+- Express.js  
+- TypeScript  
 
 ### 🔹 Database
-- Snowflake / MySQL
-- Optimized SQL queries with joins, filtering, and aggregation
+- PostgreSQL  
+- Complex SQL queries (joins, filtering, aggregations)  
+- Indexed queries for performance optimization  
 
 ### 🔹 Other Tools
-- REST APIs
-- JWT Authentication
-- Role-Based Access Control (RBAC)
-- Docker (optional)
-- Git & CI/CD
+- REST APIs  
+- JWT Authentication  
+- Role-Based Access Control (RBAC)  
+- Docker (optional)  
+- Git & CI/CD  
 
 ---
 
 ## 🏗️ Architecture & Design
 
-- Modular backend structure (Controllers, Services, Routes)
-- Scalable and normalized database schema
-- API-first design for flexibility and extensibility
-- Reusable utility functions for query building
+- Modular backend (Controllers, Services, Routes)  
+- Normalized relational schema (employees, roles, candidates)  
+- API-first architecture  
+- Scalable query design with reusable utilities  
 
 ---
 
 ## ⚙️ Features
 
 ### 👤 Employee Management
-- Add, update, delete employee records
-- Track employee details and status
+- Add, update, delete employees  
+- Manage roles and permissions  
 
 ### 📊 Recruitment System
-- Manage candidates and hiring stages
-- Track application progress
+- Candidate tracking  
+- Hiring pipeline management  
 
 ### 🔐 Authentication & Authorization
-- Secure login system using JWT
-- Role-based access (Admin, HR, Employee)
+- JWT-based authentication  
+- Role-based access (Admin, HR, Employee)  
 
 ### 📁 Filtering & Search
-- Advanced filtering
-- Query-based search with scalable performance
+- Advanced filtering with SQL queries  
+- Scalable search implementation  
 
 ### 📈 Performance
-- Optimized API responses
-- Efficient SQL queries
-- Pagination for large datasets
+- Optimized queries with indexing  
+- Pagination for large datasets  
+- Efficient API response handling  
 
 ---
 
 ## 🧪 Key Highlights
 
-- Production-level coding practices
-- Clean and scalable architecture
-- Handles complex data relationships
-- Designed like a real-world SaaS application
+- Production-ready backend architecture  
+- Strong focus on database design and query optimization  
+- Handles complex relational data  
+- Built like a real-world SaaS product  
 
 ---
 
