@@ -163,12 +163,14 @@ export const login = async (req, res) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
+    // Set refresh token for Vercel frontend (verve should be vercel, domain used for cookies)
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
       path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      domain: "hr-portel-uaew.vercel.app", // <-- Set cookie specifically for your production frontend domain
     });
 
     return res.json({
