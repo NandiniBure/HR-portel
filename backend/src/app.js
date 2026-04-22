@@ -19,9 +19,16 @@ app.set("trust proxy", 1);
 
 app.use(express.json());
 
+// app.use(
+//   cors({
+//     origin: true,
+//     credentials: true,
+//   })
+// );
+
 app.use(
   cors({
-    origin: true,
+    origin: "https://hr-portel-uaew.vercel.app",
     credentials: true,
   })
 );
