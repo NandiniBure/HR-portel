@@ -165,8 +165,8 @@ export const login = async (req, res) => {
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true, // MUST be true on Vercel (HTTPS only)
-      sameSite: "none", // MUST be "none" for cross-site cookies
+      secure: true,
+      sameSite: "none",
       path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
