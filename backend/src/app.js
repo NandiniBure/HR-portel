@@ -28,7 +28,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: "https://hr-portel-uaew.vercel.app",
+    origin: ["https://hr-portel-uaew.vercel.app", "http://localhost:8080"],
     credentials: true,
   })
 );

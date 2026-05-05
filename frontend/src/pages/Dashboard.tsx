@@ -26,16 +26,18 @@ const Dashboard = () => {
 
   return (
     <HRLayout title="Dashboard" subtitle="Welcome back, Jane. Here's what's happening today.">
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="space-y-6  px-2 sm:px-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard title="Total Employees" value={data?.length} change="+12 this month" changeType="positive" icon={Users} />
           <StatCard title="On Leave Today" value={onLeaveToday?.data?.length} change="3 pending approval" changeType="neutral" icon={CalendarDays} iconColor="bg-warning" />
-
+          {/* Hide Briefcase unless needed, maintaining previous card count */}
           <StatCard title="Attendance Rate" value={allAttendanceData?.data?.attendanceRate} change="+1.3% vs last month" changeType="positive" icon={TrendingUp} iconColor="bg-success" />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2"><EmployeeTable /></div>
-          <div className="space-y-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="w-full lg:w-2/3">
+            <EmployeeTable />
+          </div>
+          <div className="w-full lg:w-1/3 space-y-6">
             {employeeData?.user_role === "manager" && <LeaveRequests />}
             {/* <ActivityFeed /> */}
           </div>

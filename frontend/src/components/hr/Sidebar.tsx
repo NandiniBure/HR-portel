@@ -13,7 +13,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useGetEmployeeByIdQuery } from "@/store/api/employeeApi";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
 // Define roles
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/", roles: ["employee", "manager", "admin"] },
@@ -28,7 +29,7 @@ const NAV_ITEMS = [
 ];
 
 // Extract role safely
-function extractUserRole(employeeData) {
+function extractUserRole(employeeData: any): string | undefined {
   if (!employeeData) return undefined;
   if (employeeData.role) return employeeData.role;
   if (employeeData.user_role) return employeeData.user_role;
@@ -42,8 +43,6 @@ const Sidebar = () => {
 
   const userId = localStorage.getItem("userId");
 
-
-
   const {
     data: employeeData,
     refetch,
@@ -51,8 +50,8 @@ const Sidebar = () => {
   } = useGetEmployeeByIdQuery(undefined, {
     skip: !userId,
   });
-  const userRole = extractUserRole(employeeData);
 
+  const userRole = extractUserRole(employeeData);
 
   // Default values
   let displayName = "Jane Doe";
@@ -64,73 +63,140 @@ const Sidebar = () => {
     displayInitials = `${employeeData.first_name[0]}${employeeData.last_name[0]}`.toUpperCase();
   }
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Utility to close sidebar on navigation on mobile
+  const handleNav = (path: string) => {
+    navigate(path);
+    setMobileOpen(false);
+  };
+
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col z-50">
+    <>
+      {/* Mobile (small screens): Toggle button (hamburger) */}
+      <button
+        className="md:hidden fixed left-3 top-3 z-50 p-2 rounded bg-sidebar-primary hover:bg-sidebar-accent transition-colors"
+        onClick={() => setMobileOpen(true)}
+        aria-label="Open sidebar"
+        type="button"
+      >
+        <svg
+          className="w-6 h-6 text-sidebar-primary-foreground"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
 
-      {/* Header */}
-      <div className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border">
-        <div className="w-9 h-9 rounded-lg bg-sidebar-primary flex items-center justify-center">
-          <Building2 className="w-5 h-5 text-sidebar-primary-foreground" />
-        </div>
-        <div>
-          <h1 className="text-sidebar-accent-foreground font-bold text-lg">
-            HR Portal
-          </h1>
-          <p className="text-sidebar-foreground text-xs">
-            People Management
-          </p>
-        </div>
-      </div>
+      {/* Overlay for mobile when sidebar is open */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {NAV_ITEMS.filter(
-          (item) => !item.roles || (userRole && item.roles.includes(userRole))
-        ).map((item) => (
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed left-0 top-0 h-screen w-64 bg-sidebar  flex flex-col z-50 transition-transform duration-300",
+          "transform md:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}
+        role="navigation"
+        aria-label="Sidebar"
+      >
+        {/* Mobile close (X) button */}
+        <div className="flex md:hidden justify-end items-center px-4 pt-4">
           <button
-            key={item.label}
-            onClick={() => navigate(item.path)}
-            className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-              location.pathname === item.path
-                ? "bg-sidebar-accent text-sidebar-primary"
-                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            )}
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close sidebar"
+            className="p-2 rounded hover:bg-sidebar-accent transition-colors"
+            type="button"
           >
-            <item.icon className="w-5 h-5" />
-            {item.label}
+            <svg
+              className="w-6 h-6 text-sidebar-primary-foreground"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
-        ))}
-      </nav>
-
-      {/* User Profile */}
-      <div className="px-3 pb-4">
-        <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-sidebar-accent">
-          <div className="w-8 h-8 rounded-full bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground text-sm font-bold">
-            {displayInitials}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-accent-foreground truncate">
-              {isLoading ? "Loading..." : displayName}
-            </p>
-            <p className="text-xs text-sidebar-foreground truncate">
-              {displayRole}
-            </p>
-          </div>
-
-          <LogOut
-            className="w-4 h-4 text-sidebar-foreground cursor-pointer hover:text-sidebar-accent-foreground transition-colors"
-            onClick={() => {
-              localStorage.removeItem("userId");
-              localStorage.removeItem("token");
-              navigate("/auth");
-            }}
-          />
         </div>
-      </div>
-    </aside>
+
+        {/* Header */}
+        <div className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border">
+          <div className="w-9 h-9 rounded-lg bg-sidebar-primary flex items-center justify-center">
+            <Building2 className="w-5 h-5 text-sidebar-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-sidebar-accent-foreground font-bold text-lg">
+              HR Portal
+            </h1>
+            <p className="text-sidebar-foreground text-xs">
+              People Management
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {NAV_ITEMS.filter(
+            (item) => !item.roles || (userRole && item.roles.includes(userRole))
+          ).map((item) => (
+            <button
+              key={item.label}
+              onClick={() => handleNav(item.path)}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                location.pathname === item.path
+                  ? "bg-sidebar-accent text-sidebar-primary"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              )}
+            >
+              <item.icon className="w-5 h-5" />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* User Profile */}
+        <div className="px-3 pb-4">
+          <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-sidebar-accent">
+            <div className="w-8 h-8 rounded-full bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground text-sm font-bold">
+              {displayInitials}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-sidebar-accent-foreground truncate">
+                {isLoading ? "Loading..." : displayName}
+              </p>
+              <p className="text-xs text-sidebar-foreground truncate">
+                {displayRole}
+              </p>
+            </div>
+
+            <LogOut
+              className="w-4 h-4 text-sidebar-foreground cursor-pointer hover:text-sidebar-accent-foreground transition-colors"
+              onClick={() => {
+                localStorage.removeItem("userId");
+                localStorage.removeItem("token");
+                setMobileOpen(false);
+                navigate("/auth");
+              }}
+            />
+          </div>
+        </div>
+      </aside>
+    </>
   );
 };
 
-export default Sidebar; 
+export default Sidebar;
