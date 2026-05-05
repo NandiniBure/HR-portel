@@ -26,12 +26,7 @@ app.use(express.json());
 //   })
 // );
 
-app.use(
-  cors({
-    origin: "https://hr-portel-uaew.vercel.app",
-    credentials: true,
-  })
-);
+app.options("*", cors());
 
 app.use(
   helmet({
